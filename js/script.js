@@ -161,4 +161,5 @@ function checkBricks(mark) {
             
         }
      }
+     // Lägg till poängräkningen samt textskrivningen för antal poäng
 } // end checkBricks
