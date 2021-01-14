@@ -27,18 +27,7 @@ document.getElementById("newGameBtn").onclick=startGame;
 document.getElementById("newBricksBtn").onclick=newBricks;
 
 // Händelsehanterare för drag and drop
-let dragBricksElem = document.getElementById("newBricks").getElementsByTagName("img");
-for (let i = 0; i < dragBricksElem.length; i++) {
-    dragBricksElem[i].draggable = true;
-    dragBricksElem[i].addEventListener("dragstart",dragstartBricks);
-    dragBricksElem[i].addEventListener("dragend",dragendBricks);
-}
-let dropBricksElem = document.getElementById("board").getElementsByTagName("td");
-for (let i = 0; i <dropBricksElem.length; i++){
-    dropBricksElem[i].addEventListener("dragover",dropZone)
-    dropBricksElem[i].addEventListener("dragleave",dropZone)
-    dropBricksElem[i].addEventListener("drop",dropZone)
-}
+
 
 newBricksBtn.disabled = true;
 }
@@ -52,6 +41,19 @@ function startGame() {
     newBricksBtn.disabled = false; // Aktivera Nya brickor knappen
     newGameBtn.disabled = true; // Avaktivera knappen vid klick
     newBricks();
+
+    let dragBricksElem = document.getElementById("newBricks").getElementsByTagName("img"); // Funktion för att kunna flytta brickor 
+        for (let i = 0; i < dragBricksElem.length; i++) {
+        dragBricksElem[i].draggable = true;
+        dragBricksElem[i].addEventListener("dragstart",dragstartBricks);
+        dragBricksElem[i].addEventListener("dragend",dragendBricks);
+}
+    let dropBricksElem = document.getElementById("board").getElementsByTagName("td"); // Funktion för vad som ska hända vid dragover, dragleave och drop
+        for (let i = 0; i < dropBricksElem.length; i++){
+        dropBricksElem[i].addEventListener("dragover",dropZone)
+        dropBricksElem[i].addEventListener("dragleave",dropZone)
+        dropBricksElem[i].addEventListener("drop",dropZone)
+}
 } // end startGame
 
 // Nya brickor
@@ -63,50 +65,63 @@ function newBricks(){
         let newUrl = "img/" + brickValue + ".png"; // URL för nya brickor
         
         newBricksElem[i].src = newUrl;
-        newBricksElem[i].classList.add("brick");
-        newBricksElem[i].classList.remove("empty");
-        newBricksElem[i].id = brickValue
+        newBricksElem[i].classList.add("brick"); // Lägga till Brick Classen
+        newBricksElem[i].classList.remove("empty"); // Ta bort Empty Classen
+        newBricksElem[i].id = brickValue // Brickvalue används för att inte störa newBricksElem arrayen vid dragstart och dragend event
         
-        bricks.splice(ix,1);
+        bricks.splice(ix,1); // för att välja ut bilden och bara en bild
     }
     newBricksBtn.disabled = true; // Avaktivera knappen
 } // end newBricks
 
 // Funktion för att kunna dra brickorna över spelplanen
 function dragstartBricks(e){
+    
     e.dataTransfer.setData("url",this.src);
     draggingBrickElem = this;
 } // end dragstartBricks
 
 // Funktion för att sluta dra brickorna över spelplanen
 function dragendBricks(e) { 
+    let dragBricksElem = document.getElementById("newBricks").getElementsByTagName("img");
+    for (let i = 0; i < dragBricksElem.length; i++) { // Ta bort att kunna flytta på brickor
+        dragBricksElem[i].draggable = false;
+        dragBricksElem[i].removeEventListener("dragstart",dragstartBricks);
+        dragBricksElem[i].removeEventListener("dragend",dragendBricks);
+    }
+    let dropBricksElem = document.getElementById("board").getElementsByTagName("td"); // Ta bort Dropzone-tillägg, så som färgändring
+        for (let i = 0; i < dropBricksElem.length; i++){
+        dropBricksElem[i].removeEventListener("dragover",dropZone)
+        dropBricksElem[i].removeEventListener("dragleave",dropZone)
+        dropBricksElem[i].removeEventListener("drop",dropZone)
+        }
 } // end dragendWord
 
 function dropZone(e){
 	e.preventDefault();
 	if (e.type == "dragover") {
-		this.style.backgroundColor = "#9C9";
+		this.style.backgroundColor = "#9C9"; // Ändra bakgrundsfärg till annan färg vid hover
 	}
 	else if (e.type == "dragleave") {
-		this.style.backgroundColor = "";
+		this.style.backgroundColor = ""; // Ta bort bakgrundsfärg
 	}
 	else if (e.type == "drop") {
-        //TODO: Du kan inte droppa en brick till en redan befintlig bricka
+        
         // Det här är när vi droppar en bricka från "nya brickor"
 		this.style.backgroundColor = "";
 		let imgUrl = e.dataTransfer.getData("url");
         e.target.src = imgUrl;
         // Target är den nya brickan till vänster
         // Gör nya brickan till en brick
-        e.target.classList.add("brick");
+        e.target.classList.add("brick"); // Välja element med brick element
         e.target.id = draggingBrickElem.id
         let imgElems = boardElem.getElementsByTagName("img");
         
 
         draggingBrickElem.src = "img/empty.png";
-        draggingBrickElem.classList.remove("brick");
-        draggingBrickElem.classList.add("empty");
-        draggingBrickElem.id = null
+        draggingBrickElem.classList.remove("brick"); // Ta bort brick classen
+        draggingBrickElem.classList.add("empty"); // Lägga till empty classen
+        draggingBrickElem.id = null // Göra ID till null för att kunna räkna ID sen för amountOfBricksLeft
         
        let amountOfBricksLeft = 4;
         for (let i =0; i < 4; i++){
