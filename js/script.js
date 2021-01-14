@@ -40,6 +40,7 @@ window.addEventListener("load",init);
 function startGame() {
     newBricksBtn.disabled = false; // Aktivera Nya brickor knappen
     newGameBtn.disabled = true; // Avaktivera knappen vid klick
+    document.getElementsByTagName("td").innerHTML = "";
     newBricks();
 
     let dragBricksElem = document.getElementById("newBricks").getElementsByTagName("img"); // Funktion för att kunna flytta brickor 
@@ -84,16 +85,17 @@ function dragstartBricks(e){
 // Funktion för att sluta dra brickorna över spelplanen
 function dragendBricks(e) { 
     let dragBricksElem = document.getElementById("newBricks").getElementsByTagName("img");
-    for (let i = 0; i < dragBricksElem.length; i++) { // Ta bort att kunna flytta på brickor
-        dragBricksElem[i].draggable = false;
-        dragBricksElem[i].removeEventListener("dragstart",dragstartBricks);
-        dragBricksElem[i].removeEventListener("dragend",dragendBricks);
-    }
-    let dropBricksElem = document.getElementById("board").getElementsByTagName("td"); // Ta bort Dropzone-tillägg, så som färgändring
-        for (let i = 0; i < dropBricksElem.length; i++){
-        dropBricksElem[i].removeEventListener("dragover",dropZone)
-        dropBricksElem[i].removeEventListener("dragleave",dropZone)
-        dropBricksElem[i].removeEventListener("drop",dropZone)
+         for (let i = 20; i < dragBricksElem.length; i++) { // Ta bort att kunna flytta på brickor
+            dragBricksElem[i].draggable = false;
+            dragBricksElem[i].removeEventListener("dragstart",dragstartBricks);
+            dragBricksElem[i].removeEventListener("dragend",dragendBricks);
+        }
+
+        let dropBricksElem = document.getElementById("board").getElementsByTagName("td"); // Ta bort Dropzone-tillägg, så som färgändring
+        for (let i = 20; i < dropBricksElem.length; i++){
+            dropBricksElem[i].removeEventListener("dragover",dropZone)
+            dropBricksElem[i].removeEventListener("dragleave",dropZone)
+            dropBricksElem[i].removeEventListener("drop",dropZone)
         }
 } // end dragendWord
 
@@ -168,11 +170,16 @@ function checkBricks(mark) {
             if (parseInt(previousBrick.id) < parseInt(brick.id)) {
                 // Den här är mindre! Strunta i resten av kolumnerna och lägg ett kryss
                 currentRowMarkElem.innerHTML = ("&cross;");
+                newGameBtn.disabled = false;
+                newBricksBtn.disabled = true;
+            
                 break;
             }
             // Nu har vi gått igenom alla kolumner för den nuvarande raden
             // Nu lägger vi till en bock
             currentRowMarkElem.innerHTML = ("&check;");
+            newBricksBtn.disabled = true;
+            newGameBtn.disabled = false;
             
         }
      }
