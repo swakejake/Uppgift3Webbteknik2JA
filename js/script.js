@@ -27,6 +27,7 @@ msgElem = document.getElementById("message");
 pointsElem = document.getElementById("totPoints");
 gamesElem = document.getElementById("countGames");
 imgElems = document.getElementsByClassName("r1,r2,r3,r4");
+markElems = document.getElementsByClassName("mark");
 document.getElementById("newGameBtn").onclick=startGame; 
 document.getElementById("newBricksBtn").onclick=newBricks;
 
@@ -35,30 +36,45 @@ document.getElementById("newBricksBtn").onclick=newBricks;
 dragBricksElem = document.getElementById("newBricks").getElementsByTagName("img"); 
 dropBricksElem = document.getElementById("board").getElementsByClassName("empty"); 
         
-newBricksBtn.disabled = true;
+newBricksBtn.disabled = true; // Inaktivera knappen newBricks
 
-saveState = {
-    "roundPoints": 0,
-    "totalPoints": 0,
-    "currentRound": 0,
-    "gamesPlayed": 0,
-}
+loadGame();
 }
 // end Init
-window.addEventListener("load",init);
+window.addEventListener("load",init,);
 // funktioner
 
 // Nytt spel
 function startGame() {
     newBricksBtn.disabled = false; // Aktivera Nya brickor knappen
     newGameBtn.disabled = true; // Avaktivera knappen vid klick
-
+    saveState.gamesPlayed = saveState.gamesPlayed + 1;
+    
     for (let i = 0; i < dragBricksElem.length; i++) { // En variabel för att hantera dragstart och dragend händelsehanterare
         dragBricksElem[i].draggable = true;
         dragBricksElem[i].addEventListener("dragstart",dragstartBricks);
         dragBricksElem[i].addEventListener("dragend",dragendBricks);
     }
 
+    // Återställ alla brickor från tidigare spel till "empty"
+    for (let i = 0; i < dropBricksElem.length; i++) {
+        // Vi vill sätta bilden till empty
+        dropBricksElem[i].src = "img/empty.png";
+        // Vi vill ta bort id-taggen 
+        dropBricksElem[i].removeAttribute('id');
+        // Vi vill ta bort klassen brick?
+        dropBricksElem[i].classList.remove("brick");
+        // Vi vill lägga till empty class?????? Eller inte?
+        dropBricksElem[i].classList.add("empty");
+    }
+
+    // Ta bort checkgrejen också
+    for (let i = 0; i < markElems.length; i++) {
+        markElems[i].innerHTML = "";
+    }
+    bricks = allBricks.slice(0); // Kopiera om allBricks igen för att kunna köra spelet från noll
+    saveState.roundPoints = 0; // Skriv roundPoints till 0
+    msgElem.innerHTML = ""; // Ta texten från föregående omgång
 } // end startGame
 
 // Nya brickor
@@ -82,17 +98,17 @@ function newBricks(){
 // Funktion för att kunna dra brickorna över spelplanen
 function dragstartBricks(e){
     e.dataTransfer.setData("url",this.src);
-    //e.dataTransfer.setData("url",this.src);
+    
     draggingBrickElem = this;
 
     for (let i = 0; i < dropBricksElem.length; i++){ // En loop som slår på dragover, dragleave och drop händelsehanterare
-        dropBricksElem[i].addEventListener("dragover",dropZone)
-        dropBricksElem[i].addEventListener("dragleave",dropZone)
-        dropBricksElem[i].addEventListener("drop",dropZone)
         if (this.classList.contains("empty")){
             return;
         }
-    }
+        dropBricksElem[i].addEventListener("dragover",dropZone)
+        dropBricksElem[i].addEventListener("dragleave",dropZone)
+        dropBricksElem[i].addEventListener("drop",dropZone)
+        }
 } // end dragstartBricks
 
 // Funktion för att sluta dra brickorna över spelplanen
@@ -107,18 +123,27 @@ function dragendBricks(e) { // En loop som tar bort dragover, dragleave och drop
 function dropZone(e){
 	e.preventDefault();
 	if (e.type == "dragover") {
-		this.style.backgroundColor = "#9C9"; // Ändra bakgrundsfärg till annan färg vid hover
+        if (e.target.classList.contains("brick")) {// Om den nya bricka innehåller en bricka, gör inget
+            return;
+        }   
+        this.style.backgroundColor = "#9C9"; // Ändra bakgrundsfärg till annan färg vid hover
 	}
 	else if (e.type == "dragleave") {
-		this.style.backgroundColor = ""; // Ta bort bakgrundsfärg
+        if (e.target.classList.contains("brick")) { // Om den nya bricka innehåller en bricka, gör inget
+            return;
+          }  
+        this.style.backgroundColor = ""; // Ta bort bakgrundsfärg
 	}
 	else if (e.type == "drop") {
-
+        // Om den nya brickan inte är tom så borde vi inte kunna lägga denna.
+        if (e.target.classList.contains("brick")) {
+                        return;
+                }
         // Det här är när vi droppar en bricka från "nya brickor"
 		this.style.backgroundColor = "";
-		let imgUrl = e.dataTransfer.getData("url");
+		let imgUrl = e.dataTransfer.getData("url"); // Hämta bild-url från den dragna brickan
         e.target.src = imgUrl;
-        // Target är den nya brickan till vänster
+        // Target är den nya brickan till vänster        
         // Gör nya brickan till en brick
         e.target.classList.add("brick"); // Välja element med brick element
         e.target.id = draggingBrickElem.id
@@ -126,9 +151,9 @@ function dropZone(e){
         draggingBrickElem.src = "img/empty.png"; // Sätta vilken bild dragginBricksElem ska ha
         draggingBrickElem.classList.remove("brick"); // Ta bort brick classen
         draggingBrickElem.classList.add("empty"); // Lägga till empty classen
-        draggingBrickElem.id = null // Göra ID till null för att kunna räkna ID sen för amountOfBricksLeft
+        draggingBrickElem.removeAttribute('id'); // Göra ID till null för att kunna räkna ID sen för amountOfBricksLeft
 
-       let amountOfBricksLeft = 4;
+       let amountOfBricksLeft = 4; // Sätta antal brickor till 4
         for (let i =0; i < 4; i++){
             // Anledningen att göra contains är för att classList är en "array" som kan innehålla flera värden
             if (newBricksElem[i].classList.contains("empty")) {
@@ -141,22 +166,22 @@ function dropZone(e){
         }
         // Om vi har lagt ut alla brickor så kan vi validera
         // Bricks är från början 40 lång. Om den är 4*4=16 mindre och vi har lagt ut alla så kör vi
-        console.log(bricks.length, amountOfBricksLeft)
         if (bricks.length === 24 && amountOfBricksLeft === 0) {
             checkBricks("r")
             checkBricks("c")
             msgElem.innerHTML = "Du har fått " + saveState.roundPoints + " poäng";
             gamesElem.innerHTML = saveState.gamesPlayed;
+            saveState.totalPoints = saveState.totalPoints + saveState.roundPoints;
+            pointsElem.innerHTML = saveState.totalPoints;
+            saveGame();
         }
     }
-
 }   
 // Funktion för att kontrollera brickorna
 // mark = r för rad och c för kolumn
 function checkBricks(mark) {
     // Du ska kontrollera R1,R2,R3,R4 samt C1,C2,C3,C4
     // Varför i = 1 och i < 5? Jo för att vi ska loopa 4 ggr från kolumn/rad 1 eftersom att den heter så i HTML
-    ++saveState.gamesPlayed;  
     outerLoop:
      for (let i =1; i < 5; i++){
         // För varje rad kolla om det är en serie
@@ -172,8 +197,6 @@ function checkBricks(mark) {
             }
             // annars jämför "brick" mot föregående bricka "previousBrick". Den nuvarande måste vara lägre än föregående
             let previousBrick = rowOfBricks[j-1] // Previousbrick är rowofbricks (J) - 1
-            
-            
             // Parseint eftersom att id är en sträng
             if (parseInt(previousBrick.id) > parseInt(brick.id)) {
                 // Den här är mindre! Strunta i resten av kolumnerna och lägg ett kryss
@@ -190,14 +213,22 @@ function checkBricks(mark) {
         newGameBtn.disabled = false; // Slå på knappen newGame
         ++saveState.roundPoints; // Spara poängen i roundPoints
         }
-          
-     // Lägg till poängräkningen samt textskrivningen för antal poäng
 } // end checkBricks
 
 function saveGame(){ // Spara poäng och antal spel spelade
-    localStorage.ja224ucUserInfo = roundPoints + "&" + gamesPlayed;
+    window.localStorage.setItem('totalPointsja224ucUserInfo', saveState.totalPoints)
+    window.localStorage.setItem('gamesPlayedja224ucUserInfo', saveState.gamesPlayed)
 }
-
 function loadGame(){ // Ladda in antal poäng och spel spelade.
+    let localPoints =  window.localStorage.getItem('totalPointsja224ucUserInfo') // Sätta localStorage till totalPointsja224ucUserInfo
+    let localGames = window.localStorage.getItem('gamesPlayedja224ucUserInfo') // Sätta localStorage gamesPlayed till gamesPlayedja224ucUserInfo
+    // Skriva ut localStorage resultatet i totPoints och countGames
+    gamesElem.innerHTML = localGames;
+    pointsElem.innerHTML = localPoints;
 
+    saveState = { // Spara localStorage i spelet och göra om till siffror med parseInt
+        "totalPoints": parseInt(localPoints) || 0,
+        "gamesPlayed": parseInt(localGames) || 0,
+        "roundPoints": 0,
+    }
 }
